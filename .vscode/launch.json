@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "AutofixCompilerApplication (backend)",
+      "request": "launch",
+      "mainClass": "com.rithish.autofix.AutofixCompilerApplication",
+      "projectName": "autofix-compiler",
+      "javaExec": "C:/Program Files/Java/jdk-25/bin/java.exe",
+      "cwd": "${workspaceFolder}/backend/autofix-compiler",
+      "preLaunchTask": "Build autofix-compiler"
+    }
+  ]
+}

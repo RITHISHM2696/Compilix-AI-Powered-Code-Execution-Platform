@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build autofix-compiler",
+      "type": "shell",
+      "command": "${workspaceFolder}\\backend\\autofix-compiler\\mvnw.cmd",
+      "args": [
+        "-q",
+        "-DskipTests",
+        "compile"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend/autofix-compiler",
+        "env": {
+          "JAVA_HOME": "C:\\Program Files\\Java\\jdk-25"
+        }
+      },
+      "problemMatcher": [
+        "$javac"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
