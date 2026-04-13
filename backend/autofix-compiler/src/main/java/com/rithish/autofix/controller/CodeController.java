@@ -1,7 +1,9 @@
 package com.rithish.autofix.controller;
 
 import com.rithish.autofix.aiworks.AIService;
-import com.rithish.autofix.model.*;
+import com.rithish.autofix.model.CodeRequest;
+import com.rithish.autofix.model.ExecutionResponse;
+import com.rithish.autofix.model.ExecutionResult;
 import com.rithish.autofix.service.ExecutionService;
 
 import java.util.Map;
@@ -15,6 +17,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/code")
 public class CodeController {
 
+    private static final Pattern COMPILATION_PATTERN = Pattern.compile(
+            "([^\\s:]+\\.java):(\\d+):\\s*error:\\s*(.+)"
+    );
+
     @Autowired
     private ExecutionService executionService;
 
@@ -24,7 +30,6 @@ public class CodeController {
     //  MAIN PIPELINE
     @PostMapping("/run")
     public ExecutionResponse runCode(@RequestBody CodeRequest request) {
-
         ExecutionResult result = executionService.runCode(
                 request.getCode(),
                 request.getLanguage()
@@ -32,10 +37,9 @@ public class CodeController {
 
         ExecutionResponse response = new ExecutionResponse();
 
-        // ERROR CASE → ONE AI CALL
         if (!result.isSuccess()) {
             if (isCompilationError(result.getError())) {
-            response.setCompilationError(true);
+                response.setCompilationError(true);
                 Map<String, String> aiResult = aiService.analyzeAll(
                         request.getCode(),
                         result.getError(),
@@ -65,17 +69,12 @@ public class CodeController {
                 }
             } else {
                 response.setCompilationError(false);
-                // For runtime/system errors, return code unchanged and skip AI fix.
                 response.setError(result.getError());
                 response.setSuggestedFix(request.getCode());
                 response.setExplanation("Runtime error detected. Auto-fix is only applied for compilation errors.");
             }
-        }
-
-        // SUCCESS CASE → ONE AI CALL
-        else {
+        } else {
             response.setCompilationError(false);
-
             response.setOutput(result.getOutput());
 
             Map<String, String> aiResult = aiService.analyzeAll(
@@ -100,9 +99,8 @@ public class CodeController {
             return "Your code has a compile error.";
         }
 
-        Pattern pattern = Pattern.compile("([^\\s:]+\\.java):(\\d+):\\s*error:\\s*(.+)");
         for (String line : error.split("\\R")) {
-            Matcher matcher = pattern.matcher(line.trim());
+            Matcher matcher = COMPILATION_PATTERN.matcher(line.trim());
             if (matcher.find()) {
                 String file = matcher.group(1);
                 String lineNo = matcher.group(2);

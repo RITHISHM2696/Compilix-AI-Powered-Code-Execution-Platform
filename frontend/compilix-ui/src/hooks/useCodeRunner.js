@@ -1,39 +1,36 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { executeCode } from "../services/api";
 import { parseAIResponse } from "../services/aiService";
 import { DEFAULT_LANGUAGE, DEFAULT_SNIPPETS } from "../utils/constants";
 import { formatOutput } from "../utils/formatOutput";
 
-export function useCodeRunner() {
-  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
-  const [code, setCode] = useState(DEFAULT_SNIPPETS[DEFAULT_LANGUAGE]);
-  const [output, setOutput] = useState("// Output will appear here");
-  const [error, setError] = useState("");
-  const [aiResponse, setAIResponse] = useState({
+function createEmptyAiResponse() {
+  return {
     explanation: "",
     suggestedFix: "",
     timeComplexity: "",
     spaceComplexity: "",
     isCompilationError: false,
     hasError: false,
-  });
+  };
+}
+
+export function useCodeRunner() {
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
+  const [code, setCode] = useState(DEFAULT_SNIPPETS[DEFAULT_LANGUAGE]);
+  const [output, setOutput] = useState("// Output will appear here");
+  const [error, setError] = useState("");
+  const [aiResponse, setAIResponse] = useState(createEmptyAiResponse);
   const [isRunning, setIsRunning] = useState(false);
 
-  const canRun = useMemo(() => Boolean(code && code.trim()), [code]);
+  const canRun = Boolean(code && code.trim());
 
   const onLanguageChange = (nextLanguage) => {
     setLanguage(nextLanguage);
     setCode(DEFAULT_SNIPPETS[nextLanguage] || "");
     setOutput("// Output will appear here");
     setError("");
-    setAIResponse({
-      explanation: "",
-      suggestedFix: "",
-      timeComplexity: "",
-      spaceComplexity: "",
-      isCompilationError: false,
-      hasError: false,
-    });
+    setAIResponse(createEmptyAiResponse());
   };
 
   const runCode = async () => {

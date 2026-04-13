@@ -9,36 +9,28 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ExecutionService {
 
-    // 🔥 MAIN ENTRY METHOD
-    public ExecutionResult runCode(String code, String language) {
+    private static final int EXECUTION_TIMEOUT_SECONDS = 5;
 
+    public ExecutionResult runCode(String code, String language) {
         if (language.equalsIgnoreCase("java")) {
             return runJavaCode(code);
-
         } else if (language.equalsIgnoreCase("python")) {
             return runPythonCode(code);
-
         } else if (language.equalsIgnoreCase("c")) {
             return runCCode(code);
-
         } else if (language.equalsIgnoreCase("cpp")) {
             return runCppCode(code);
-
         } else {
             return new ExecutionResult(false, null, "Unsupported language");
         }
     }
 
-    // ================= JAVA =================
     public ExecutionResult runJavaCode(String code) {
-
         File javaFile = new File("Main.java");
         File classFile = new File("Main.class");
 
         try {
-            FileWriter writer = new FileWriter(javaFile);
-            writer.write(code);
-            writer.close();
+            writeCode(javaFile, code);
 
             Process compile = Runtime.getRuntime().exec("javac Main.java");
             compile.waitFor();
@@ -49,23 +41,7 @@ public class ExecutionService {
                         "Compilation Error:\n" + compileError);
             }
 
-            Process run = Runtime.getRuntime().exec("java Main");
-
-            boolean finished = run.waitFor(5, TimeUnit.SECONDS);
-
-            if (!finished) {
-                run.destroy();
-                return new ExecutionResult(false, null,
-                        "Error: Execution timed out");
-            }
-
-            String output = readProcessOutput(run);
-
-            if (output.startsWith("Runtime Error")) {
-                return new ExecutionResult(false, null, output);
-            }
-
-            return new ExecutionResult(true, output, null);
+            return executeRunningProcess(Runtime.getRuntime().exec("java Main"));
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
@@ -76,33 +52,12 @@ public class ExecutionService {
         }
     }
 
-    // ================= PYTHON =================
     public ExecutionResult runPythonCode(String code) {
-
         File file = new File("Main.py");
 
         try {
-            FileWriter writer = new FileWriter(file);
-            writer.write(code);
-            writer.close();
-
-            Process run = Runtime.getRuntime().exec("python Main.py");
-
-            boolean finished = run.waitFor(5, TimeUnit.SECONDS);
-
-            if (!finished) {
-                run.destroy();
-                return new ExecutionResult(false, null,
-                        "Error: Execution timed out");
-            }
-
-            String output = readProcessOutput(run);
-
-            if (output.startsWith("Runtime Error")) {
-                return new ExecutionResult(false, null, output);
-            }
-
-            return new ExecutionResult(true, output, null);
+            writeCode(file, code);
+            return executeRunningProcess(Runtime.getRuntime().exec("python Main.py"));
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
@@ -112,16 +67,12 @@ public class ExecutionService {
         }
     }
 
-    // ================= C =================
     public ExecutionResult runCCode(String code) {
-
         File file = new File("Main.c");
         File exe = new File("Main.exe");
 
         try {
-            FileWriter writer = new FileWriter(file);
-            writer.write(code);
-            writer.close();
+            writeCode(file, code);
 
             Process compile = Runtime.getRuntime().exec("gcc Main.c -o Main.exe");
             compile.waitFor();
@@ -132,23 +83,7 @@ public class ExecutionService {
                         "Compilation Error:\n" + compileError);
             }
 
-            Process run = Runtime.getRuntime().exec("Main.exe");
-
-            boolean finished = run.waitFor(5, TimeUnit.SECONDS);
-
-            if (!finished) {
-                run.destroy();
-                return new ExecutionResult(false, null,
-                        "Error: Execution timed out");
-            }
-
-            String output = readProcessOutput(run);
-
-            if (output.startsWith("Runtime Error")) {
-                return new ExecutionResult(false, null, output);
-            }
-
-            return new ExecutionResult(true, output, null);
+            return executeRunningProcess(Runtime.getRuntime().exec("Main.exe"));
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
@@ -159,16 +94,12 @@ public class ExecutionService {
         }
     }
 
-    // ================= C++ =================
     public ExecutionResult runCppCode(String code) {
-
         File file = new File("Main.cpp");
         File exe = new File("Main.exe");
 
         try {
-            FileWriter writer = new FileWriter(file);
-            writer.write(code);
-            writer.close();
+            writeCode(file, code);
 
             Process compile = Runtime.getRuntime().exec("g++ Main.cpp -o Main.exe");
             compile.waitFor();
@@ -179,23 +110,7 @@ public class ExecutionService {
                         "Compilation Error:\n" + compileError);
             }
 
-            Process run = Runtime.getRuntime().exec("Main.exe");
-
-            boolean finished = run.waitFor(5, TimeUnit.SECONDS);
-
-            if (!finished) {
-                run.destroy();
-                return new ExecutionResult(false, null,
-                        "Error: Execution timed out");
-            }
-
-            String output = readProcessOutput(run);
-
-            if (output.startsWith("Runtime Error")) {
-                return new ExecutionResult(false, null, output);
-            }
-
-            return new ExecutionResult(true, output, null);
+            return executeRunningProcess(Runtime.getRuntime().exec("Main.exe"));
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
@@ -206,50 +121,68 @@ public class ExecutionService {
         }
     }
 
-    // 🔥 COMMON METHOD: Read Output + Errors
-    private String readProcessOutput(Process process) throws IOException {
-
-        BufferedReader output = new BufferedReader(
-                new InputStreamReader(process.getInputStream())
-        );
-
-        BufferedReader error = new BufferedReader(
-                new InputStreamReader(process.getErrorStream())
-        );
-
-        StringBuilder result = new StringBuilder();
-        StringBuilder errorMsg = new StringBuilder();
-        String line;
-
-        while ((line = output.readLine()) != null) {
-            result.append(line).append("\n");
+    private void writeCode(File file, String code) throws IOException {
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(code);
         }
-
-        while ((line = error.readLine()) != null) {
-            errorMsg.append(line).append("\n");
-        }
-
-        if (errorMsg.length() > 0) {
-            return "Runtime Error:\n" + errorMsg;
-        }
-
-        return result.toString();
     }
 
-    // 🔥 COMMON METHOD: Read Compile Errors
-    private String readErrorStream(Process process) throws IOException {
+    private ExecutionResult executeRunningProcess(Process process) throws IOException, InterruptedException {
+        boolean finished = process.waitFor(EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        BufferedReader error = new BufferedReader(
-                new InputStreamReader(process.getErrorStream())
-        );
-
-        StringBuilder errorMsg = new StringBuilder();
-        String line;
-
-        while ((line = error.readLine()) != null) {
-            errorMsg.append(line).append("\n");
+        if (!finished) {
+            process.destroy();
+            return new ExecutionResult(false, null, "Error: Execution timed out");
         }
 
-        return errorMsg.toString();
+        String output = readProcessOutput(process);
+
+        if (output.startsWith("Runtime Error")) {
+            return new ExecutionResult(false, null, output);
+        }
+
+        return new ExecutionResult(true, output, null);
+    }
+
+    private String readProcessOutput(Process process) throws IOException {
+        try (
+                BufferedReader output = new BufferedReader(
+                        new InputStreamReader(process.getInputStream())
+                );
+                BufferedReader error = new BufferedReader(
+                        new InputStreamReader(process.getErrorStream())
+                )
+        ) {
+            StringBuilder result = new StringBuilder();
+            StringBuilder errorMsg = new StringBuilder();
+            String line;
+
+            while ((line = output.readLine()) != null) {
+                result.append(line).append("\n");
+            }
+
+            while ((line = error.readLine()) != null) {
+                errorMsg.append(line).append("\n");
+            }
+
+            if (errorMsg.length() > 0) {
+                return "Runtime Error:\n" + errorMsg;
+            }
+
+            return result.toString();
+        }
+    }
+
+    private String readErrorStream(Process process) throws IOException {
+        try (BufferedReader error = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            StringBuilder errorMsg = new StringBuilder();
+            String line;
+
+            while ((line = error.readLine()) != null) {
+                errorMsg.append(line).append("\n");
+            }
+
+            return errorMsg.toString();
+        }
     }
 }

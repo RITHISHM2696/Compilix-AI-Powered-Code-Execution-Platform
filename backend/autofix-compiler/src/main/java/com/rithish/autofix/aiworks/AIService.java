@@ -1,28 +1,29 @@
 package com.rithish.autofix.aiworks;
 
+import org.springframework.http.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class AIService {
 
+    private static final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+
     @Value("${groq.api.key}")
     private String apiKey;
-
-    private final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // 🔥 MAIN GROQ CALL
     @SuppressWarnings("unchecked")
     private String callGroq(String prompt) {
-
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -78,7 +79,6 @@ public class AIService {
         }
     }
 
-    // 🔹 CLEAN RESPONSE
     private String cleanResponse(String response) {
         return response
                 .replace("```json", "")
@@ -87,9 +87,7 @@ public class AIService {
                 .trim();
     }
 
-    // 🔥 SINGLE AI CALL
     public Map<String, String> analyzeAll(String code, String error, String language) {
-
         String prompt = "Analyze the following " + language + " code.\n\n"
                 + "Code:\n" + code +
                 "\n\nError:\n" + error +
@@ -117,9 +115,7 @@ public class AIService {
         return parseAIResponse(rawResponse);
     }
 
-    // 🔥 JACKSON PARSER (PRODUCTION LEVEL)
     private Map<String, String> parseAIResponse(String response) {
-
         Map<String, String> result = emptyAIResult();
 
         if (response == null || response.isBlank()) {

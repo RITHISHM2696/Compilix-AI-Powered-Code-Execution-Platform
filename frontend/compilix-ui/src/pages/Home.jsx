@@ -8,6 +8,7 @@ import { useCodeRunner } from "../hooks/useCodeRunner";
 function Home() {
   const shellRef = useRef(null);
   const [editorTheme, setEditorTheme] = useState("vs-dark");
+  const isDarkTheme = editorTheme === "vs-dark";
 
   const {
     language,
@@ -46,11 +47,21 @@ function Home() {
         </div>
 
         <div className="toolbar-controls">
-          <button type="button" className="toolbar-button toolbar-icon-button" onClick={toggleFullscreen} title="Fullscreen">
+          <button
+            type="button"
+            className="toolbar-button toolbar-icon-button"
+            onClick={toggleFullscreen}
+            title="Fullscreen"
+          >
             ⛶
           </button>
-          <button type="button" className="toolbar-button toolbar-icon-button" onClick={toggleTheme} title={editorTheme === "vs-dark" ? "Light Mode" : "Dark Mode"}>
-            {editorTheme === "vs-dark" ? "☀" : "☾"}
+          <button
+            type="button"
+            className="toolbar-button toolbar-icon-button"
+            onClick={toggleTheme}
+            title={isDarkTheme ? "Light Mode" : "Dark Mode"}
+          >
+            {isDarkTheme ? "☀" : "☾"}
           </button>
           <button
             type="button"

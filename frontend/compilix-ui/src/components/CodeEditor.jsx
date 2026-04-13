@@ -47,7 +47,11 @@ function CodeEditor({ code, onCodeChange, language, theme }) {
               A+
             </button>
           </div>
-          <button type="button" className="toolbar-button panel-copy" onClick={handleCopy}>
+          <button
+            type="button"
+            className="toolbar-button panel-copy"
+            onClick={handleCopy}
+          >
             {copyLabel}
           </button>
         </div>

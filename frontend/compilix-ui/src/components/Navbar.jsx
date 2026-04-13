@@ -12,9 +12,9 @@ function Navbar({ language, onLanguageChange, onRun, isRunning, canRun }) {
       <div className="topbar-actions">
         <LanguageSelector value={language} onChange={onLanguageChange} />
         <button
-          onClick={onRun}
-          className="run-button"
           type="button"
+          className="run-button"
+          onClick={onRun}
           disabled={isRunning || !canRun}
         >
           {isRunning ? <Loader label="Running" /> : "Run Code"}

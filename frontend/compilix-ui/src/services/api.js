@@ -1,4 +1,4 @@
-const RAW_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 const API_PREFIX = "/api/code";
 
 function normalizeBaseUrl(url) {
@@ -9,7 +9,7 @@ function normalizeBaseUrl(url) {
 }
 
 function buildUrl(path) {
-  return `${normalizeBaseUrl(RAW_BASE_URL)}${API_PREFIX}${path}`;
+  return `${normalizeBaseUrl(API_BASE_URL)}${API_PREFIX}${path}`;
 }
 
 async function postJson(path, payload) {

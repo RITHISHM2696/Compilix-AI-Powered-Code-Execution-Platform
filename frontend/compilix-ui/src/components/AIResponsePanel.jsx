@@ -1,4 +1,3 @@
-// 🔹 FORMAT CODE WITH PROPER INDENTATION
 const formatCodeDisplay = (code) => {
   if (!code || typeof code !== "string") return code;
 
@@ -9,20 +8,17 @@ const formatCodeDisplay = (code) => {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    
+
     if (!trimmed) {
       continue;
     }
 
-    // Decrease depth for closing braces
     if (trimmed.startsWith("}")) {
       depth = Math.max(0, depth - 1);
     }
 
-    // Add properly indented line
     formatted.push("  ".repeat(depth) + trimmed);
 
-    // Increase depth for opening braces
     if (trimmed.endsWith("{")) {
       depth++;
     }
@@ -145,7 +141,7 @@ function AIResponsePanel({ aiResponse, onApplySuggestedFix, currentCode, languag
   return (
     <section className="panel panel-ai">
       <div className="panel-header panel-ai-header">
-        <span>✨ AI Insights</span>
+        <span>AI Insights</span>
       </div>
       <div className="ai-content">
         <div className="complexity-grid">
