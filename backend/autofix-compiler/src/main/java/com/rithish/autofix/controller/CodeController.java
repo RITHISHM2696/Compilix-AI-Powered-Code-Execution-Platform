@@ -17,17 +17,20 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/code")
 public class CodeController {
 
+    // Finds Java compiler error lines like: Main.java:12: error: ...
     private static final Pattern COMPILATION_PATTERN = Pattern.compile(
             "([^\\s:]+\\.java):(\\d+):\\s*error:\\s*(.+)"
     );
 
+    // Runs user code in a safe execution environment.
     @Autowired
     private ExecutionService executionService;
 
+    // Calls AI to suggest fixes and provide complexity details.
     @Autowired
     private AIService aiService;
 
-    //  MAIN PIPELINE
+    // Main endpoint: run code, fix compile errors with AI, then return final result.
     @PostMapping("/run")
     public ExecutionResponse runCode(@RequestBody CodeRequest request) {
         ExecutionResult result = executionService.runCode(
@@ -37,17 +40,23 @@ public class CodeController {
 
         ExecutionResponse response = new ExecutionResponse();
 
+        // If code execution fails, decide whether it is a compile error or runtime error.
         if (!result.isSuccess()) {
             if (isCompilationError(result.getError())) {
                 response.setCompilationError(true);
+
+            // Ask AI for fixed code and complexity analysis.
                 Map<String, String> aiResult = aiService.analyzeAll(
                         request.getCode(),
                         result.getError(),
                         request.getLanguage()
                 );
 
+            // Show a short and user-friendly compile error summary.
                 response.setExplanation(summarizeCompilationError(result.getError()));
                 String suggestedFix = aiResult.get("fixedCode");
+
+            // If AI does not return fixed code, keep the original code.
                 if (suggestedFix == null || suggestedFix.isBlank()) {
                     suggestedFix = request.getCode();
                 }
@@ -56,7 +65,7 @@ public class CodeController {
                 response.setTimeComplexity(aiResult.get("timeComplexity"));
                 response.setSpaceComplexity(aiResult.get("spaceComplexity"));
 
-                // Run corrected code and return the real JVM runtime error/output.
+                // Run corrected code and return real output or runtime error.
                 ExecutionResult fixedResult = executionService.runCode(
                         suggestedFix,
                         request.getLanguage()
@@ -68,12 +77,14 @@ public class CodeController {
                     response.setError(fixedResult.getError());
                 }
             } else {
+                // Runtime errors are not auto-fixed.
                 response.setCompilationError(false);
                 response.setError(result.getError());
                 response.setSuggestedFix(request.getCode());
                 response.setExplanation("Runtime error detected. Auto-fix is only applied for compilation errors.");
             }
         } else {
+            // If initial run is successful, return output and complexity analysis.
             response.setCompilationError(false);
             response.setOutput(result.getOutput());
 
@@ -90,10 +101,12 @@ public class CodeController {
         return response;
     }
 
+    // Checks whether the returned error is a compile error.
     private boolean isCompilationError(String error) {
         return error != null && error.startsWith("Compilation Error");
     }
 
+    // Converts detailed compiler output into a short readable message.
     private String summarizeCompilationError(String error) {
         if (error == null || error.isBlank()) {
             return "Your code has a compile error.";
@@ -112,6 +125,7 @@ public class CodeController {
         return "Your code has a compile error. Please check the code syntax and try again.";
     }
 
+    // Maps common Java compiler messages to simple English text.
     private String toSimpleCompilationMessage(String file, String lineNo, String rawMessage) {
         if (rawMessage == null || rawMessage.isBlank()) {
             return "There is a compile error in " + file + " at line " + lineNo + ".";
@@ -143,7 +157,7 @@ public class CodeController {
         return "Compile error in " + file + " at line " + lineNo + ": " + message;
     }
 
-    // 🔥 RUN FIXED CODE (NO AI)
+    // Runs user-provided fixed code directly, without calling AI.
     @PostMapping("/run-fixed")
     public ExecutionResponse runFixedCode(@RequestBody CodeRequest request) {
 
@@ -154,6 +168,7 @@ public class CodeController {
 
         ExecutionResponse response = new ExecutionResponse();
 
+        // Return output if successful, otherwise return error.
         if (!result.isSuccess()) {
             response.setCompilationError(false);
             response.setError(result.getError());
