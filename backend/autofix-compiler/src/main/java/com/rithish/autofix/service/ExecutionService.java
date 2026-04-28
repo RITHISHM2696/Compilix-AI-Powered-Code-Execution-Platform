@@ -67,7 +67,12 @@ public class ExecutionService {
         }
     }
 
-    public ExecutionResult runCCode(String code) {
+                /**
+                 * Maximum time (in seconds) to allow a running user program to execute.
+                 * If the process exceeds this duration it will be destroyed and a
+                 * timeout error will be returned.
+                 */
+                private static final int EXECUTION_TIMEOUT_SECONDS = 5;
         File file = new File("Main.c");
         File exe = new File("Main.exe");
 
@@ -83,7 +88,12 @@ public class ExecutionService {
                         "Compilation Error:\n" + compileError);
             }
 
-            return executeRunningProcess(Runtime.getRuntime().exec("Main.exe"));
+                /**
+                 * Public dispatcher that routes the incoming source code string to the
+                 * appropriate language-specific runner. The controller calls this
+                 * method to get an ExecutionResult which contains output or errors.
+                 */
+                public ExecutionResult runJavaCode(String code) {
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
@@ -111,6 +121,10 @@ public class ExecutionService {
             }
 
             return executeRunningProcess(Runtime.getRuntime().exec("Main.exe"));
+                /**
+                 * Saves Python code to `Main.py` and invokes the system `python` to
+                 * execute it. Captures stdout/stderr and returns an ExecutionResult.
+                 */
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
