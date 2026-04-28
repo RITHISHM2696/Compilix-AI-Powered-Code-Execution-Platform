@@ -7,10 +7,15 @@ import java.io.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
+// Service that compiles/runs submitted source code and captures output.
+// It writes temporary files, runs compilers/interpreters, then returns
+// the program output or any compilation/runtime errors.
 public class ExecutionService {
 
+    // Max seconds to wait for a user program before timing out.
     private static final int EXECUTION_TIMEOUT_SECONDS = 5;
 
+    // Decide which language-specific runner to use for the given code.
     public ExecutionResult runCode(String code, String language) {
         if (language.equalsIgnoreCase("java")) {
             return runJavaCode(code);
@@ -25,6 +30,7 @@ public class ExecutionService {
         }
     }
 
+    // Save Java code to Main.java, compile it, and run Main.
     public ExecutionResult runJavaCode(String code) {
         File javaFile = new File("Main.java");
         File classFile = new File("Main.class");
@@ -52,6 +58,7 @@ public class ExecutionService {
         }
     }
 
+    // Save Python code to Main.py and run it with the system python.
     public ExecutionResult runPythonCode(String code) {
         File file = new File("Main.py");
 
@@ -67,6 +74,7 @@ public class ExecutionService {
         }
     }
 
+    // Save C code to Main.c, compile with gcc, then run the produced exe.
     public ExecutionResult runCCode(String code) {
         File file = new File("Main.c");
         File exe = new File("Main.exe");
@@ -94,6 +102,7 @@ public class ExecutionService {
         }
     }
 
+    // Save C++ code to Main.cpp, compile with g++, then run the exe.
     public ExecutionResult runCppCode(String code) {
         File file = new File("Main.cpp");
         File exe = new File("Main.exe");
@@ -121,12 +130,15 @@ public class ExecutionService {
         }
     }
 
+    // Write the given source string to a file on disk.
     private void writeCode(File file, String code) throws IOException {
         try (FileWriter writer = new FileWriter(file)) {
             writer.write(code);
         }
     }
 
+    // Wait for a process to finish (with timeout) and collect output.
+    // Returns success with stdout, or error with stderr text.
     private ExecutionResult executeRunningProcess(Process process) throws IOException, InterruptedException {
         boolean finished = process.waitFor(EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
@@ -144,6 +156,8 @@ public class ExecutionService {
         return new ExecutionResult(true, output, null);
     }
 
+    // Read both stdout and stderr from a finished process. If stderr
+    // has content, return it marked as a runtime error.
     private String readProcessOutput(Process process) throws IOException {
         try (
                 BufferedReader output = new BufferedReader(
@@ -173,6 +187,7 @@ public class ExecutionService {
         }
     }
 
+    // Read only the error stream from a process (used for compile errors).
     private String readErrorStream(Process process) throws IOException {
         try (BufferedReader error = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
             StringBuilder errorMsg = new StringBuilder();
