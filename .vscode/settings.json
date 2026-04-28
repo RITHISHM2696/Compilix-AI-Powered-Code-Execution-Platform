@@ -8,5 +8,6 @@
         }
     ],
     "java.import.maven.enabled": true,
-    "java.project.importHint": true
+    "java.project.importHint": true,
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
