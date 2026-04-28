@@ -17,6 +17,10 @@ public class ExecutionService {
 
     // Decide which language-specific runner to use for the given code.
     public ExecutionResult runCode(String code, String language) {
+        if (language == null) {
+            return new ExecutionResult(false, null, "Unsupported language");
+        }
+
         if (language.equalsIgnoreCase("java")) {
             return runJavaCode(code);
         } else if (language.equalsIgnoreCase("python")) {
@@ -38,16 +42,19 @@ public class ExecutionService {
         try {
             writeCode(javaFile, code);
 
-            Process compile = Runtime.getRuntime().exec("javac Main.java");
-            compile.waitFor();
+            try (Process compile = Runtime.getRuntime().exec("javac Main.java")) {
+                compile.waitFor();
 
-            String compileError = readErrorStream(compile);
-            if (!compileError.isEmpty()) {
-                return new ExecutionResult(false, null,
-                        "Compilation Error:\n" + compileError);
+                String compileError = readErrorStream(compile);
+                if (!compileError.isEmpty()) {
+                    return new ExecutionResult(false, null,
+                            "Compilation Error:\n" + compileError);
+                }
             }
 
-            return executeRunningProcess(Runtime.getRuntime().exec("java Main"));
+            try (Process process = Runtime.getRuntime().exec("java Main")) {
+                return executeRunningProcess(process);
+            }
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
@@ -64,7 +71,9 @@ public class ExecutionService {
 
         try {
             writeCode(file, code);
-            return executeRunningProcess(Runtime.getRuntime().exec("python Main.py"));
+            try (Process process = Runtime.getRuntime().exec("python Main.py")) {
+                return executeRunningProcess(process);
+            }
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
@@ -82,16 +91,19 @@ public class ExecutionService {
         try {
             writeCode(file, code);
 
-            Process compile = Runtime.getRuntime().exec("gcc Main.c -o Main.exe");
-            compile.waitFor();
+            try (Process compile = Runtime.getRuntime().exec("gcc Main.c -o Main.exe")) {
+                compile.waitFor();
 
-            String compileError = readErrorStream(compile);
-            if (!compileError.isEmpty()) {
-                return new ExecutionResult(false, null,
-                        "Compilation Error:\n" + compileError);
+                String compileError = readErrorStream(compile);
+                if (!compileError.isEmpty()) {
+                    return new ExecutionResult(false, null,
+                            "Compilation Error:\n" + compileError);
+                }
             }
 
-            return executeRunningProcess(Runtime.getRuntime().exec("Main.exe"));
+            try (Process process = Runtime.getRuntime().exec("Main.exe")) {
+                return executeRunningProcess(process);
+            }
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
@@ -110,16 +122,19 @@ public class ExecutionService {
         try {
             writeCode(file, code);
 
-            Process compile = Runtime.getRuntime().exec("g++ Main.cpp -o Main.exe");
-            compile.waitFor();
+            try (Process compile = Runtime.getRuntime().exec("g++ Main.cpp -o Main.exe")) {
+                compile.waitFor();
 
-            String compileError = readErrorStream(compile);
-            if (!compileError.isEmpty()) {
-                return new ExecutionResult(false, null,
-                        "Compilation Error:\n" + compileError);
+                String compileError = readErrorStream(compile);
+                if (!compileError.isEmpty()) {
+                    return new ExecutionResult(false, null,
+                            "Compilation Error:\n" + compileError);
+                }
             }
 
-            return executeRunningProcess(Runtime.getRuntime().exec("Main.exe"));
+            try (Process process = Runtime.getRuntime().exec("Main.exe")) {
+                return executeRunningProcess(process);
+            }
 
         } catch (Exception e) {
             return new ExecutionResult(false, null,
